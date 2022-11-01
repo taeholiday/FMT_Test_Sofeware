@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fmt_test_sofeware/barcode_scanner_page.dart';
 import 'package:fmt_test_sofeware/camera_and_gallery_page.dart';
 import 'package:fmt_test_sofeware/ict_device_page.dart';
+import 'package:fmt_test_sofeware/sim_dispensor_test_page.dart';
 import 'package:fmt_test_sofeware/thermal_printer_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -56,10 +57,26 @@ class _HomePageState extends State<HomePage> {
                 testBarcodeScanner,
               ),
             ),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'SIM DISPENSOR',
+                testSIMDispensor,
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  testSIMDispensor() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const SimDispensorTestPage(),
+        ));
   }
 
   testBarcodeScanner() {

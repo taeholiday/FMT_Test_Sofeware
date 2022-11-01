@@ -136,7 +136,7 @@ class _IctNk77TestPageState extends State<IctNk77TestPage> {
     );
   }
 
-  directions5C() async {
+  directions5C() {
     List<String> dataString = [];
     var newData;
     List<int> data5C = [];
@@ -148,46 +148,46 @@ class _IctNk77TestPageState extends State<IctNk77TestPage> {
     }
     data5C = newData;
     port!.config.baudRate = 9600;
-    port!.config.bits = 8;
+    port!.config.bits = 7;
     port!.config.parity = SerialPortParity.even;
     port!.config.stopBits = 1;
     port!.config.setFlowControl(SerialPortFlowControl.none);
-    print("parity bit ${SerialPortParity.even}");
+
     port!.write(
-      Uint8List.fromList([
-        0x5C,
-        // 0x4E,
-        // 0x4B,
-        // 0x37,
-        // 0x37,
-        // 0x2D,
-        // 0x2D,
-        // 0x2D,
-        // 0x2D,
-        // 0x49,
-        // 0x43,
-        // 0x54,
-        // 0x30,
-        // 0x30,
-        // 0x30,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00,
-        // 0x00
-      ]),
-    );
+        Uint8List.fromList([
+          0x5C,
+          0x4E,
+          0x4B,
+          0x37,
+          0x37,
+          0x2D,
+          0x2D,
+          0x2D,
+          0x2D,
+          0x49,
+          0x43,
+          0x54,
+          0x30,
+          0x30,
+          0x30,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00,
+          0x00
+        ]),
+        timeout: 5);
 
     // if (dataString.contains(
     //     '5b4e4b37372d2d2d2d494354303030 00 000 000 000 000 000 000 000 000 000 000')) {
@@ -206,7 +206,7 @@ class _IctNk77TestPageState extends State<IctNk77TestPage> {
     });
   }
 
-  directions5B() async {
+  directions5B() {
     port!.config.baudRate = 9600;
     port!.config.bits = 8;
     port!.config.parity = SerialPortParity.even;
@@ -220,7 +220,7 @@ class _IctNk77TestPageState extends State<IctNk77TestPage> {
     });
   }
 
-  directions02() async {
+  directions02() {
     port!.config.baudRate = 9600;
     port!.config.bits = 8;
     port!.config.parity = SerialPortParity.even;
@@ -235,14 +235,14 @@ class _IctNk77TestPageState extends State<IctNk77TestPage> {
     });
   }
 
-  connectPort() async {
+  connectPort() {
     int index = devices!.indexWhere((element) => element == deviceSelect);
 
     if (index != null) {
       port = SerialPort(devices![index].toString());
     }
 
-    bool openResult = await port!.openReadWrite();
+    bool openResult = port!.open(mode: SerialPortMode.readWrite);
     if (!openResult) {
       print("Failed to open");
       return;

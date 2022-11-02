@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-
 import 'package:flutter_libserialport/flutter_libserialport.dart';
 import 'package:fmt_test_sofeware/provider/set_string_provider/set_string_provider.dart';
 import 'package:hex/hex.dart';
@@ -15,13 +14,13 @@ class SimDispensorTestPage extends StatefulWidget {
 }
 
 class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
+  SetStringProvider setStringProvider = SetStringProvider();
   double size = 0.0;
   List<String>? devices;
-  String? status = "";
   String? deviceSelect;
   SerialPort? port;
   List<int> response = [];
-  SetStringProvider setStringProvider = SetStringProvider();
+  List<String> reformateString = [];
 
   @override
   void initState() {
@@ -34,13 +33,14 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
 
   @override
   void dispose() {
-    port?.close();
+    if (port != null) {
+      port!.close();
+    }
     super.dispose();
   }
 
   _getPort() async {
     List<String> availablePort = SerialPort.availablePorts;
-
     if (availablePort.isNotEmpty) {
       setState(() {
         devices = availablePort;
@@ -50,140 +50,253 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
 
   @override
   Widget build(BuildContext context) {
+    setStringProvider = Provider.of<SetStringProvider>(context);
     size = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("SIM DISPENSOR"),
+        title: Text('Test SIM Dispenser'),
       ),
-      body: Center(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            ' ${setStringProvider.getString}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                height: 2,
-                fontSize: 20,
-                color: Color.fromARGB(255, 0, 16, 236)),
-          ),
-          const Text(
-            "SIM DISPENSOR",
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                height: 2,
-                fontSize: 30,
-                color: Color.fromARGB(255, 0, 16, 236)),
-          ),
-          devices != null
-              ? SizedBox(
-                  width: size > 600 ? size * 0.4 : size * 0.8,
-                  child: DropdownButton(
-                    isExpanded: true,
-                    value: deviceSelect,
-                    items:
-                        devices!.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value..toString(),
-                        child: Text(
-                          value..toString(),
-                          style: const TextStyle(color: Colors.black),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? value) {
-                      setState(() {
-                        deviceSelect = value;
-                        print(deviceSelect);
-                      });
-                    },
-                  ),
-                )
-              : Container(),
-          SizedBox(
-            width: size > 600 ? size * 0.4 : size * 0.8,
-            child: buttonGanareter(
-              context,
-              'connect Port',
-              connectPort,
+      body: SafeArea(
+          child: Center(
+        child: Column(
+          children: [
+            Text(
+              ' ${setStringProvider.getString}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  height: 2,
+                  fontSize: 20,
+                  color: Color.fromARGB(255, 0, 16, 236)),
             ),
-          ),
-          SizedBox(
-            width: size > 600 ? size * 0.4 : size * 0.8,
-            child: buttonGanareter(
-              context,
-              'Move card to content IC position',
-              moveCardToContentICposition,
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.4,
+              child: Image.asset("images/MTK.jpg"),
             ),
-          ),
-          SizedBox(
-            width: size > 600 ? size * 0.4 : size * 0.8,
-            child: buttonGanareter(
-              context,
-              'Move card & hold card at bezel',
-              moveCardAndHoldCardAtBezel,
+            const Text(
+              "SIM Dispenser",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  height: 2,
+                  fontSize: 30,
+                  color: Color.fromARGB(255, 0, 16, 236)),
             ),
-          ),
-          SizedBox(
-            width: size > 600 ? size * 0.4 : size * 0.8,
-            child: buttonGanareter(
-              context,
-              'Move card out of bezel',
-              moveCardOutOfBezel,
+            devices != null
+                ? SizedBox(
+                    width: size > 600 ? size * 0.4 : size * 0.8,
+                    child: DropdownButton(
+                      isExpanded: true,
+                      value: deviceSelect,
+                      items: devices!
+                          .map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value..toString(),
+                          child: Text(
+                            value..toString(),
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          deviceSelect = value;
+                          setStringProvider.setString(deviceSelect!);
+                        });
+                      },
+                    ),
+                  )
+                : Container(),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'connect Port',
+                connectPort,
+              ),
             ),
-          ),
-          SizedBox(
-            width: size > 600 ? size * 0.4 : size * 0.8,
-            child: buttonGanareter(
-              context,
-              'Get Machine status ( current status)',
-              getMachineStatusCurrentStatus,
+            const Text(
+              "Reset",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  height: 2,
+                  fontSize: 30,
+                  color: Color.fromARGB(255, 0, 16, 236)),
             ),
-          ),
-        ],
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'Reset &Capture card into capture box',
+                resetAndCaptureCardIntoCaptureBox,
+              ),
+            ),
+            const Text(
+              "Card Movement",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  height: 2,
+                  fontSize: 30,
+                  color: Color.fromARGB(255, 0, 16, 236)),
+            ),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'Move card to content IC position',
+                moveCardToContentICposition,
+              ),
+            ),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'Move card & hold card at bezel',
+                moveCardAndHoldCardAtBezel,
+              ),
+            ),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'Move capture card',
+                moveCaptureCard,
+              ),
+            ),
+            const Text(
+              "Inquire Status",
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  height: 2,
+                  fontSize: 30,
+                  color: Color.fromARGB(255, 0, 16, 236)),
+            ),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'Get current status of machine',
+                currentStatusOfMachine,
+              ),
+            ),
+            SizedBox(
+              width: size > 600 ? size * 0.4 : size * 0.8,
+              child: buttonGanareter(
+                context,
+                'Get basic status of machine',
+                basicStatusOfMachine,
+              ),
+            ),
+          ],
+        ),
       )),
     );
   }
 
-  getMachineStatusCurrentStatus() {
-    port!.config.baudRate = 9600;
-    port!.config.bits = 8;
-    port!.config.parity = SerialPortParity.none;
-    port!.config.stopBits = 1;
+  resetAndCaptureCardIntoCaptureBox() {
+    final Uint8List unit8List = Uint8List.fromList(
+        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x30, 0x31, 0x03, 0xB0]);
+    port!.write(unit8List);
+    String tempData = HEX.encode(unit8List);
+    var buffer = StringBuffer();
+    for (int i = 0; i < tempData.length; i++) {
+      buffer.write(tempData[i]);
+      var nonZeroIndex = i + 1;
+      if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+        buffer.write(', ');
+      }
+    }
 
-    port!.write(Uint8List.fromList(
-        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x31, 0x30, 0x03, 0xB0]));
+    setStringProvider.setString(buffer.toString());
+    response.clear();
   }
 
-  moveCardOutOfBezel() {
-    port!.config.baudRate = 9600;
-    port!.config.bits = 8;
-    port!.config.parity = SerialPortParity.none;
-    port!.config.stopBits = 1;
+  basicStatusOfMachine() {
+    final Uint8List unit8List = Uint8List.fromList(
+        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x31, 0x31, 0x03, 0xB1]);
+    port!.write(unit8List);
+    String tempData = HEX.encode(unit8List);
+    var buffer = StringBuffer();
+    for (int i = 0; i < tempData.length; i++) {
+      buffer.write(tempData[i]);
+      var nonZeroIndex = i + 1;
+      if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+        buffer.write(', ');
+      }
+    }
 
-    port!.write(Uint8List.fromList(
-        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x32, 0x39, 0x03, 0xBA]));
+    setStringProvider.setString(buffer.toString());
+    response.clear();
+  }
+
+  currentStatusOfMachine() {
+    final Uint8List unit8List = Uint8List.fromList(
+        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x31, 0x30, 0x03, 0xB0]);
+    port!.write(unit8List);
+    String tempData = HEX.encode(unit8List);
+    var buffer = StringBuffer();
+    for (int i = 0; i < tempData.length; i++) {
+      buffer.write(tempData[i]);
+      var nonZeroIndex = i + 1;
+      if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+        buffer.write(', ');
+      }
+    }
+
+    setStringProvider.setString(buffer.toString());
+    response.clear();
+  }
+
+  moveCaptureCard() {
+    final Uint8List unit8List = Uint8List.fromList(
+        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x32, 0x33, 0x03, 0xB0]);
+    port!.write(unit8List);
+    String tempData = HEX.encode(unit8List);
+    print(tempData.length);
+    var buffer = StringBuffer();
+    for (int i = 0; i < tempData.length; i++) {
+      buffer.write(tempData[i]);
+      var nonZeroIndex = i + 1;
+      if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+        buffer.write(', ');
+      }
+    }
+    print(buffer);
+    setStringProvider.setString(buffer.toString());
+    response.clear();
   }
 
   moveCardAndHoldCardAtBezel() {
-    port!.config.baudRate = 9600;
-    port!.config.bits = 8;
-    port!.config.parity = SerialPortParity.none;
-    port!.config.stopBits = 1;
-
-    port!.write(Uint8List.fromList(
-        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x32, 0x30, 0x03, 0xB3]));
+    final Uint8List unit8List = Uint8List.fromList(
+        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x32, 0x30, 0x03, 0xB3]);
+    port!.write(unit8List);
+    String tempData = HEX.encode(unit8List);
+    var buffer = StringBuffer();
+    for (int i = 0; i < tempData.length; i++) {
+      buffer.write(tempData[i]);
+      var nonZeroIndex = i + 1;
+      if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+        buffer.write(', ');
+      }
+    }
+    setStringProvider.setString(buffer.toString());
+    response.clear();
   }
 
   moveCardToContentICposition() {
-    port!.config.baudRate = 9600;
-    port!.config.bits = 8;
-    port!.config.parity = SerialPortParity.none;
-    port!.config.stopBits = 1;
-
-    port!.write(Uint8List.fromList(
-        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x32, 0x31, 0x03, 0xB2]));
+    final Uint8List unit8List = Uint8List.fromList(
+        [0xF2, 0x00, 0x00, 0x03, 0x43, 0x32, 0x31, 0x03, 0xB2]);
+    port!.write(unit8List);
+    String tempData = HEX.encode(unit8List);
+    var buffer = StringBuffer();
+    for (int i = 0; i < tempData.length; i++) {
+      buffer.write(tempData[i]);
+      var nonZeroIndex = i + 1;
+      if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+        buffer.write(', ');
+      }
+    }
+    setStringProvider.setString(buffer.toString());
+    response.clear();
   }
 
   connectPort() {
@@ -196,14 +309,17 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
     bool openResult = port!.open(mode: SerialPortMode.readWrite);
     if (!openResult) {
       print("Failed to open");
-
       return;
     } else {
       print("success to open");
+      setStringProvider.setString("success to open");
+      port!.config.baudRate = 9600;
+      port!.config.bits = 8;
+      port!.config.parity = SerialPortParity.none;
+      port!.config.stopBits = 1;
 
       try {
         //TODO: Read on port
-
         SerialPortReader reader = SerialPortReader(port!);
         Stream<Uint8List> upcommingData = reader.stream.map((data) {
           return data;
@@ -211,27 +327,18 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
 
         upcommingData.listen((data) {
           response.addAll(data);
-          if (response.isNotEmpty &&
-              HEX.encode(response).contains("06f20000065032313231300397")) {
-            port!.config.baudRate = 9600;
-            port!.config.bits = 8;
-            port!.config.parity = SerialPortParity.none;
-            port!.config.stopBits = 1;
-
-            port!.write(Uint8List.fromList([0x06]));
-            setStringProvider.setString(HEX.encode(response));
-            response.clear();
-          } else if (response.isNotEmpty &&
-              HEX.encode(response).contains("06f20000065032303131300395")) {
-            port!.config.baudRate = 9600;
-            port!.config.bits = 8;
-            port!.config.parity = SerialPortParity.none;
-            port!.config.stopBits = 1;
-
-            port!.write(Uint8List.fromList([0x06]));
-            setStringProvider.setString(HEX.encode(response));
-            response.clear();
-          }
+          Future.delayed(const Duration(seconds: 1), () async {
+            String tempData = HEX.encode(response);
+            var buffer = StringBuffer();
+            for (int i = 0; i < tempData.length; i++) {
+              buffer.write(tempData[i]);
+              var nonZeroIndex = i + 1;
+              if (nonZeroIndex % 2 == 0 && nonZeroIndex != tempData.length) {
+                buffer.write(', ');
+              }
+            }
+            setStringProvider.setString(buffer.toString());
+          }).then((value) => port!.write(Uint8List.fromList([0x06])));
         });
       } on SerialPortError catch (err, _) {
         print(SerialPort.lastError);

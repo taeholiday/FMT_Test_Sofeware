@@ -7,7 +7,6 @@ class SetStringProvider with ChangeNotifier {
 
   setString(String string) {
     newString = string;
-    print(newString);
     notifyListeners();
   }
 }

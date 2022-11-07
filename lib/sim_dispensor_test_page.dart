@@ -25,6 +25,7 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
   List<String> reformateString = [];
   Timer? timer1;
   Timer? timer2;
+  var controller = StreamController<Uint8List>();
 
   @override
   void initState() {
@@ -67,15 +68,61 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
         child: Center(
           child: Column(
             children: [
-              Text(
-                ' ${setStringProvider.getString}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    height: 2,
-                    fontSize: 20,
-                    color: Color.fromARGB(255, 0, 16, 236)),
+              StreamBuilder(
+                stream: controller.stream,
+                builder:
+                    (BuildContext context, AsyncSnapshot<Uint8List> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Text(
+                      "No data",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          height: 2,
+                          fontSize: 30,
+                          color: Color.fromARGB(255, 0, 16, 236)),
+                    );
+                  } else if (snapshot.connectionState == ConnectionState.done) {
+                    return const Text(
+                      "Done!",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          height: 2,
+                          fontSize: 30,
+                          color: Color.fromARGB(255, 0, 16, 236)),
+                    );
+                  } else if (snapshot.connectionState ==
+                      ConnectionState.active) {
+                    setdata(snapshot.data!);
+                    return const Text(
+                      "Active!",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          height: 2,
+                          fontSize: 30,
+                          color: Color.fromARGB(255, 0, 16, 236)),
+                    );
+                  } else {
+                    setdata(snapshot.data!);
+                    return Text(
+                      HEX.encode(snapshot.data!),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          height: 2,
+                          fontSize: 30,
+                          color: Color.fromARGB(255, 0, 16, 236)),
+                    );
+                  }
+                },
               ),
+              // Text(
+              //   ' ${setStringProvider.getString}',
+              //   textAlign: TextAlign.center,
+              //   style: const TextStyle(
+              //       fontWeight: FontWeight.bold,
+              //       height: 2,
+              //       fontSize: 20,
+              //       color: Color.fromARGB(255, 0, 16, 236)),
+              // ),
               SizedBox(
                 width: size > 600 ? size * 0.4 : size * 0.4,
                 child: Image.asset("images/MTK.jpg"),
@@ -360,18 +407,22 @@ class _SimDispensorTestPageState extends State<SimDispensorTestPage> {
         Stream<Uint8List> upcommingData = reader.stream.map((data) {
           return data;
         });
-
-        upcommingData.listen((data) {
-          response.addAll(data);
-          Future.delayed(const Duration(milliseconds: 300), () async {
-            print(response);
-          });
-        });
+        controller.addStream(upcommingData);
       } on SerialPortError catch (err, _) {
         print(SerialPort.lastError);
         port!.close();
       }
     }
+  }
+
+  setdata(Uint8List data) {
+    response.addAll(data);
+    print(HEX.encode(response));
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (response[0] == 6) {
+        port!.write(Uint8List.fromList([0x06]));
+      }
+    });
   }
 
   buttonGanareter(BuildContext context, String buttonName, Function function) {
